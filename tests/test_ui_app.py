@@ -84,6 +84,58 @@ def test_ui_active_result_rendering():
     assert "Execute out-of-band identity challenge" in html_corpus
 
 
+def test_ui_analysis_pipeline_success_display(monkeypatch):
+    """Verifies that running analysis displays success status and sets active_result."""
+    from unittest.mock import MagicMock
+    from trustguard.consistency_engine import MultimodalConsistencyResult
+    import trustguard.pipeline as pipeline
+
+    fake_result = MultimodalConsistencyResult(
+        claimed_identity="Target Persona",
+        risk_level="LOW",
+        modality_statuses={"image": "PASS", "voice": "PASS", "chat": "PASS", "transcript": "CAN'T TELL"},
+        contradiction_map={"agreements": ["Matches reference"], "conflicts": [], "uncertain": []},
+        explanation="Consistent.",
+        recommended_action="Proceed.",
+        details={"elapsed_time_seconds": 0.42}
+    )
+
+    monkeypatch.setattr(pipeline, "run_multimodal_analysis", MagicMock(return_value=(fake_result, [])))
+
+    at = AppTest.from_file(APP_PATH, default_timeout=60).run()
+    # Provide chat text so has_any_evidence is True
+    at.text_area[0].input("Hello, this is legitimate message.").run()
+
+    # Click analyze button
+    at.button[1].click().run()
+
+    assert len(at.exception) == 0
+    assert at.session_state.active_result is not None
+    assert len(at.success) > 0
+    assert "Multimodal Analysis complete" in at.success[0].value
+
+
+def test_ui_analysis_pipeline_error_display(monkeypatch):
+    """Verifies that an exception in the pipeline displays the error and traceback expander."""
+    from unittest.mock import MagicMock
+    import trustguard.pipeline as pipeline
+
+    def raise_err(*args, **kwargs):
+        raise RuntimeError("Simulated Pipeline Failure")
+
+    monkeypatch.setattr(pipeline, "run_multimodal_analysis", raise_err)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=60).run()
+    at.text_area[0].input("Suspicious text").run()
+
+    # Click analyze button
+    at.button[1].click().run()
+
+    assert len(at.error) > 0
+    assert any("Simulated Pipeline Failure" in err.value for err in at.error)
+    assert any("Analysis Pipeline Error" in err.value for err in at.error)
+
+
 if __name__ == "__main__":
     test_ui_initial_load()
     print(">>> test_ui_initial_load PASSED")
@@ -92,3 +144,4 @@ if __name__ == "__main__":
     test_ui_active_result_rendering()
     print(">>> test_ui_active_result_rendering PASSED")
     print("\nALL UI TESTS PASSED SUCCESSFULLY!")
+

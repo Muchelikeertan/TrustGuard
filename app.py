@@ -662,14 +662,21 @@ if analyze_clicked:
             st.session_state.active_warnings = warnings
             st.session_state.analysis_time = analysis_result.details.get("elapsed_time_seconds", 0.0)
 
-            time.sleep(0.3)
-            progress_bar.empty()
-            status_label.empty()
+            progress_bar.progress(100)
+            status_label.success(
+                f"✅ Multimodal Analysis complete in {st.session_state.analysis_time:.2f}s! Assessment details rendered below."
+            )
 
         except Exception as e:
-            print("[Fatal Live Pipeline Exception]")
+            err_msg = f"{type(e).__name__}: {str(e)}" if str(e) else type(e).__name__
+            print(f"[Fatal Live Pipeline Exception] {err_msg}")
             traceback.print_exc()
-            st.error(f"Pipeline error: {str(e)}")
+            progress_bar.empty()
+            status_label.error(f"❌ Analysis failed: {err_msg}")
+            st.error(f"⚠️ Analysis Pipeline Error: {err_msg}")
+            with st.expander("🔍 View Error Details & Full Traceback", expanded=True):
+                st.exception(e)
+                st.code(traceback.format_exc(), language="python")
         finally:
             # Strict privacy cleanup in finally block
             shutil.rmtree(temp_dir, ignore_errors=True)
