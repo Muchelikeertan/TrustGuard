@@ -1,0 +1,19 @@
+# TrustGuard Verification Thresholds
+# Used across multi-modal signal modules and the Consistency Engine
+
+image:
+  pass_max_distance: 0.55
+  fail_min_distance: 0.68
+
+voice:
+  pass_min_similarity: 0.78
+  warning_min_similarity: 0.70
+  fail_max_similarity: 0.70
+
+chat:
+  suspicious_min: 0.65
+  high_pressure_min: 0.80
+
+transcript:
+  suspicious_min: 0.65
+  high_pressure_min: 0.80

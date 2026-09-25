@@ -1,0 +1,29 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment files and credentials
+.env
+.env.*
+.streamlit/secrets.toml
+
+# System files & editor caches
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temporary and local runtime caches
+.cache/
+sample_data/private/
